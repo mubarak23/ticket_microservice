@@ -16,7 +16,7 @@ router.post('/api/users/signup',
         .isLength({min: 4, max: 8})
         .withMessage('Password must be between 4 and 8')
     ],
-    (req: Request, res: Response) => {
+    async (req: Request, res: Response) => {
     const errors = validationResult(req)
     if(!errors.isEmpty()){
         // return res.status(400).send(errors.array())
