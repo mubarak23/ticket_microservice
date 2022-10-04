@@ -1,7 +1,8 @@
 import express, {Request, Response} from 'express'
 import { body, validationResult } from 'express-validator'
+import { User } from '../models/user'
 import { RequestValidationError } from '../errors/request-validation-error'
-import { DatabaseConnectionError } from '../errors/database-connection-error'
+import { BadRequestError } from '../errors/bad-request-error'
 
 const router = express.Router()
 
@@ -19,16 +20,18 @@ router.post('/api/users/signup',
     async (req: Request, res: Response) => {
     const errors = validationResult(req)
     if(!errors.isEmpty()){
-        // return res.status(400).send(errors.array())
-        // throw new Error("Invalid Email and Password")
         throw new RequestValidationError(errors.array())
     }    
     const {email, password} = req.body
-    console.log('Sigup a new user')
-    
-   //  throw new Error('Error connecting to the database')
-   throw new DatabaseConnectionError()
-    return res.send({ success: true, message: "Auth Signup for microservice"})
+    const existingUser = await User.findOne({ email })
+    if(existingUser){
+        console.log('Email in use')
+        throw new BadRequestError('A User with the provided email already exist')
+        // return res.send({ success: false, message: "A User with the provided email already exist" })
+    }
+    const newUser = User.build({ email, password })
+    await newUser.save()
+    return res.status(201).send({ success: true, data: newUser, message: "Auth Signup for microservice"})
 })
 
 export { router as signupRouter}
