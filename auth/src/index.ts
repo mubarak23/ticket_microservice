@@ -8,8 +8,18 @@ import { signupRouter } from './routes/signup'
 import { errorHandler } from './middlewares/error-handler'
 import { NotFoundError } from './errors/not-found-error'
 import mongoose from 'mongoose'
+import cookieSession from 'cookie-session'
+import * as dotenv from 'dotenv'
+dotenv.config()
 
 const app = express()
+app.set('trust proxy', true)
+app.use(
+    cookieSession({
+        signed: false,
+        secure: false
+    })
+)
 
 app.use(json())
 
@@ -29,15 +39,19 @@ app.all('*', async () => {
 app.use(errorHandler)
 
 const start = async () => {
+   // console.log(process.env.JWT_KEY)
+    if(!process.env.JWT_KEY){
+        throw new Error('JWT KEY property is not define')
+    }
+
    try{
-    await mongoose.connect('mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0')
+    await mongoose.connect('mongodb://127.0.0.1:27017/tickets?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.6.0')
     console.log('connection to Mongodb was successful')
    }catch(e){
     console.log(e)
    }
 
    app.listen(3030, () => {
-    console.log('v1')
     console.log('listening on port 3030 !!!')
 })
 

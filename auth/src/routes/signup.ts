@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator'
 import { User } from '../models/user'
 import { RequestValidationError } from '../errors/request-validation-error'
 import { BadRequestError } from '../errors/bad-request-error'
+import jwt from 'jsonwebtoken'
 
 const router = express.Router()
 
@@ -27,10 +28,20 @@ router.post('/api/users/signup',
     if(existingUser){
         console.log('Email in use')
         throw new BadRequestError('A User with the provided email already exist')
-        // return res.send({ success: false, message: "A User with the provided email already exist" })
     }
     const newUser = User.build({ email, password })
     await newUser.save()
+    
+    // generate jsonwebtoken
+    const userJwt = jwt.sign({
+        id: newUser.id,
+        email: newUser.email
+    }, process.env.JWT_KEY!)
+
+    //store it in the session
+    req.session = {
+        jwt: userJwt
+    }
     return res.status(201).send({ success: true, data: newUser, message: "Auth Signup for microservice"})
 })
 
